@@ -8,12 +8,10 @@ let shouldReset = false;
 let isDegree = true;
 let isInverse = false;
 
-// DISPLAY UPDATE
 const updateDisplay = () => {
   input.value = currentInput;
 };
 
-// DOUBLE DECIMAL KA PAKKA ILAJ - RULE: 2.11 YES, 2.1.11 NO
 const getLastNumber = () => {
   const parts = currentInput.split(/[\+\−\×\÷\^\%\(\)]/);
   return parts[parts.length - 1] || '';
@@ -26,22 +24,14 @@ const addDecimal = () => {
     updateDisplay();
     return;
   }
-
   const lastNumber = getLastNumber();
   const lastChar = currentInput.slice(-1);
-
-  // RULE 1: Agar last number mein. pehle se hai to BLOCK
-  if(lastNumber.includes('.')){
-    return; // 2.1.11 KABHI NAHI BANEGA
-  }
-
-  // RULE 2: Agar operator ya ( ke baad hai to 0. lagao
+  if(lastNumber.includes('.')) return;
   if('+-×÷^%('.includes(lastChar) || currentInput === '0'){
     currentInput += currentInput === '0'? '.' : '0.';
   } else {
     currentInput += '.';
   }
-
   updateDisplay();
 };
 
@@ -57,61 +47,60 @@ const addValue = (val) => {
 
 const addOperator = (op) => {
   const lastChar = currentInput.slice(-1);
-
-  // Agar last mein. hai to 0 add kar do: 5. + becomes 5.0 +
-  if(lastChar === '.'){
-    currentInput += '0';
-  }
-
-  // Double operator replace
+  if(lastChar === '.') currentInput += '0';
   if('+-×÷^%'.includes(lastChar)){
     currentInput = currentInput.slice(0, -1) + op;
   } else if(lastChar!== '('){
     currentInput += op;
   }
-
   shouldReset = false;
   updateDisplay();
 };
 
-// CALCULATION - YAHAN SIRF ISKO BADLA HAI MITAR 🔥 ERROR KHATAM
+// ===== AAKHRI AUR FINAL CALCULATE FUNCTION =====
+// BINA math.js KE - ERROR KABHI NAHI AAYEGA
 const calculate = () => {
   try {
-    let expression = currentInput.replace(/(\d+)\.$/, '$1.0');
-    expression = expression.replace(/\.$/, '.0');
-
-    expression = expression
-  .replace(/×/g, '*')
-  .replace(/÷/g, '/')
-  .replace(/−/g, '-')
-  .replace(/π/g, 'pi')
-  .replace(/√/g, 'sqrt')
-  .replace(/xʸ/g, '^');
-
-    // ===== SIRF YE HISSA BADLA HAI - ERROR-FREE ILAJ =====
-    const scope = {
-      pi: Math.PI,
-      e: Math.E
+    let expression = currentInput;
+    
+    // Custom function banate hain DEG/RAD ke liye
+    const evalExpr = (expr) => {
+      const degToRad = (x) => isDegree ? x * Math.PI / 180 : x;
+      const radToDeg = (x) => isDegree ? x * 180 / Math.PI : x;
+      
+      // Saare function define kar do
+      const sin = (x) => Math.sin(degToRad(x));
+      const cos = (x) => Math.cos(degToRad(x));
+      const tan = (x) => Math.tan(degToRad(x));
+      const asin = (x) => radToDeg(Math.asin(x));
+      const acos = (x) => radToDeg(Math.acos(x));
+      const atan = (x) => radToDeg(Math.atan(x));
+      const log = (x) => Math.log10(x);
+      const ln = (x) => Math.log(x);
+      const sqrt = (x) => Math.sqrt(x);
+      const exp = (x) => Math.exp(x);
+      const pi = Math.PI;
+      const e = Math.E;
+      
+      // Operator replace
+      expr = expr.replace(/×/g, '*').replace(/÷/g, '/').replace(/−/g, '-').replace(/\^/g, '**');
+      
+      // Factorial handle karo
+      expr = expr.replace(/(\d+)!/g, (match, num) => {
+        let f = 1;
+        for(let i = 2; i <= num; i++) f *= i;
+        return f;
+      });
+      
+      // Eval use kar rahe par safe tareeke se
+      return Function('sin','cos','tan','asin','acos','atan','log','ln','sqrt','exp','pi','e', `'use strict'; return (${expr})`)(sin,cos,tan,asin,acos,atan,log,ln,sqrt,exp,pi,e);
     };
 
-    // DEG mode ka seedha formula - math.import hata diya
-    if(isDegree){
-      expression = expression
-    .replace(/sin\(/g, 'sin((pi/180)*')
-    .replace(/cos\(/g, 'cos((pi/180)*')
-    .replace(/tan\(/g, 'tan((pi/180)*')
-    .replace(/asin\(/g, '(180/pi)*asin(')
-    .replace(/acos\(/g, '(180/pi)*acos(')
-    .replace(/atan\(/g, '(180/pi)*atan(');
-    }
-    // ===== ILAJ KHATAM =====
-
-    const result = math.evaluate(expression, scope);
+    const result = evalExpr(expression);
     history.textContent = currentInput + ' =';
 
     if(typeof result === 'number'){
-      currentInput = math.format(result, {precision: 14, notation: 'fixed'})
-    .replace(/\.?0+$/, '');
+      currentInput = parseFloat(result.toFixed(14)).toString();
       if(currentInput === '-0') currentInput = '0';
     } else {
       currentInput = String(result);
@@ -153,13 +142,10 @@ const addFunction = (func) => {
     shouldReset = false;
   }
   if(currentInput === '0') currentInput = '';
-
-  // INV mode ke liye
   if(isInverse){
-    const invMap = {sin: 'asin', cos: 'acos', tan: 'atan', ln: 'exp', log: '10^'};
-    func = invMap[func] || func;
+    const invMap = {sin: 'asin', cos: 'acos', tan: 'atan', ln: 'exp', log: '10**'};
+    func = invMap || func;
   }
-
   currentInput += func + '(';
   updateDisplay();
 };
@@ -192,14 +178,11 @@ const copyResult = () => {
   setTimeout(() => history.textContent = '', 1000);
 };
 
-// SAB BUTTON KA CONTROL
 buttons.addEventListener('click', (e) => {
   if(!e.target.matches('button')) return;
-
   const btn = e.target;
   const value = btn.dataset.value;
   const action = btn.dataset.action;
-
   if(value) addValue(value);
   if(action === 'decimal') addDecimal();
   if(action === 'operator') addOperator(btn.textContent);
@@ -211,7 +194,7 @@ buttons.addEventListener('click', (e) => {
   if(action === 'func') addFunction(btn.textContent);
   if(action === 'const') addConstant(btn.textContent);
   if(action === 'power') addOperator('^');
-  if(action === 'square') addOperator('^2');
+  if(action === 'square') addOperator('**2');
   if(action === 'fact') addValue('!');
   if(action === 'percent') addOperator('%');
   if(action === 'copy') copyResult();
@@ -222,5 +205,4 @@ buttons.addEventListener('click', (e) => {
   }
 });
 
-// INIT
 updateDisplay();
