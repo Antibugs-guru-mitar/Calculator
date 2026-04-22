@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Green Scientific Calculator</title>
+  <link rel="stylesheet" href="style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="calculator">
+    <div class="status-bar">
+      <span>8:30 PM</span>
+    </div>
+    
+    <div class="display">
+      <div class="history"></div>
+      <input type="text" class="input" readonly value="0">
+    </div>
+    
+    <div class="mode-bar">
+      <span class="mode-icon">🕐</span>
+      <span class="deg-rad">DEG</span>
+    </div>
+    
+    <div class="buttons">
+      <button data-action="inv">INV</button>
+      <button data-action="mode">RAD</button>
+      <button data-action="fact">x!</button>
+      <button data-action="clear" class="red">C</button>
+      <button data-action="percent" class="green">%</button>
+      <button data-action="backspace" class="green">⌫</button>
+      <button data-action="operator" class="green">÷</button>
+
+      <button data-action="func">sin</button>
+      <button data-action="func">cos</button>
+      <button data-action="func">tan</button>
+      <button data-value="7">7</button>
+      <button data-value="8">8</button>
+      <button data-value="9">9</button>
+      <button data-action="operator" class="green">×</button>
+
+      <button data-action="func">ln</button>
+      <button data-action="func">log</button>
+      <button data-action="power">xʸ</button>
+      <button data-value="4">4</button>
+      <button data-value="5">5</button>
+      <button data-value="6">6</button>
+      <button data-action="operator" class="green">−</button>
+
+      <button data-action="const">π</button>
+      <button data-action="const">e</button>
+      <button data-action="func">√</button>
+      <button data-value="1">1</button>
+      <button data-value="2">2</button>
+      <button data-value="3">3</button>
+      <button data-action="operator" class="green">+</button>
+
+      <button data-action="copy">📋</button>
+      <button data-action="bracket">()</button>
+      <button data-action="square">x²</button>
+      <button data-value="00">00</button>
+      <button data-value="0">0</button>
+      <button data-action="decimal">.</button>
+      <button data-action="equals" class="equal">=</button>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/12.4.1/math.min.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
