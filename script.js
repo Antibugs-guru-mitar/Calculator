@@ -26,22 +26,22 @@ const addDecimal = () => {
     updateDisplay();
     return;
   }
-  
+
   const lastNumber = getLastNumber();
   const lastChar = currentInput.slice(-1);
-  
+
   // RULE 1: Agar last number mein. pehle se hai to BLOCK
   if(lastNumber.includes('.')){
     return; // 2.1.11 KABHI NAHI BANEGA
   }
-  
+
   // RULE 2: Agar operator ya ( ke baad hai to 0. lagao
   if('+-×÷^%('.includes(lastChar) || currentInput === '0'){
     currentInput += currentInput === '0'? '.' : '0.';
   } else {
     currentInput += '.';
   }
-  
+
   updateDisplay();
 };
 
@@ -57,63 +57,89 @@ const addValue = (val) => {
 
 const addOperator = (op) => {
   const lastChar = currentInput.slice(-1);
-  
+
   // Agar last mein. hai to 0 add kar do: 5. + becomes 5.0 +
   if(lastChar === '.'){
     currentInput += '0';
   }
-  
+
   // Double operator replace
   if('+-×÷^%'.includes(lastChar)){
     currentInput = currentInput.slice(0, -1) + op;
   } else if(lastChar!== '('){
     currentInput += op;
   }
-  
+
   shouldReset = false;
   updateDisplay();
 };
 
-// CALCULATION - SAB PHONE PE CHALEGA
+// CALCULATION - YAHAN ILAJ KIYA HAI MITAR 🔥 SIN COS THEEK
 const calculate = () => {
   try {
     // Fix: 5. ko 5.0 banao
     let expression = currentInput.replace(/(\d+)\.$/, '$1.0');
     expression = expression.replace(/\.$/, '.0');
-    
+
     expression = expression
-     .replace(/×/g, '*')
-     .replace(/÷/g, '/')
-     .replace(/−/g, '-')
-     .replace(/π/g, 'pi')
-     .replace(/√/g, 'sqrt')
-     .replace(/xʸ/g, '^');
-    
-    // DEG MODE KE LIYE
+    .replace(/×/g, '*')
+    .replace(/÷/g, '/')
+    .replace(/−/g, '-')
+    .replace(/π/g, 'pi')
+    .replace(/√/g, 'sqrt')
+    .replace(/xʸ/g, '^');
+
+    // ===== SIN COS TAN KA NAYA ILAJ START =====
+    // Purana unit( wala tareeka hata diya, ye wala 100% chalta hai
+    const scope = {
+      pi: Math.PI,
+      e: Math.E
+    };
+
     if(isDegree){
-      expression = expression.replace(/sin\(/g, 'sin(unit(')
-       .replace(/cos\(/g, 'cos(unit(')
-       .replace(/tan\(/g, 'tan(unit(');
-      expression = expression.replace(/unit\(/g, 'unit(').replace(/\)/g, ' deg))');
+      // DEG MODE: degree ko radian mein badlo pehle
+      math.import({
+        sin: function(x) { return Math.sin(x * Math.PI / 180); },
+        cos: function(x) { return Math.cos(x * Math.PI / 180); },
+        tan: function(x) { return Math.tan(x * Math.PI / 180); },
+        asin: function(x) { return Math.asin(x) * 180 / Math.PI; },
+        acos: function(x) { return Math.acos(x) * 180 / Math.PI; },
+        atan: function(x) { return Math.atan(x) * 180 / Math.PI; }
+      }, { override: true });
+    } else {
+      // RAD MODE: direct math.js wale use karo
+      math.import({
+        sin: Math.sin,
+        cos: Math.cos,
+        tan: Math.tan,
+        asin: Math.asin,
+        acos: Math.acos,
+        atan: Math.atan
+      }, { override: true });
     }
-    
-    const result = math.evaluate(expression);
+    // ===== SIN COS TAN KA NAYA ILAJ END =====
+
+    const result = math.evaluate(expression, scope);
     history.textContent = currentInput + ' =';
-    
+
     // Result format karo - 2.1.11 jaisa kabhi nahi aayega
     if(typeof result === 'number'){
       currentInput = math.format(result, {precision: 14, notation: 'fixed'})
-       .replace(/\.?0+$/, ''); // Extra 0 hatao: 2.1000 -> 2.1
+      .replace(/\.?0+$/, ''); // Extra 0 hatao: 2.1000 -> 2.1
+      if(currentInput === '-0') currentInput = '0'; // -0 ka bug fix
     } else {
       currentInput = String(result);
     }
-    
+
     shouldReset = true;
     updateDisplay();
   } catch(err) {
     currentInput = 'Error';
     shouldReset = true;
     updateDisplay();
+    setTimeout(() => {
+      history.textContent = '';
+    }, 1500);
   }
 };
 
@@ -139,13 +165,13 @@ const addFunction = (func) => {
     shouldReset = false;
   }
   if(currentInput === '0') currentInput = '';
-  
+
   // INV mode ke liye
   if(isInverse){
     const invMap = {sin: 'asin', cos: 'acos', tan: 'atan', ln: 'exp', log: '10^'};
     func = invMap[func] || func;
   }
-  
+
   currentInput += func + '(';
   updateDisplay();
 };
@@ -181,11 +207,11 @@ const copyResult = () => {
 // SAB BUTTON KA CONTROL
 buttons.addEventListener('click', (e) => {
   if(!e.target.matches('button')) return;
-  
+
   const btn = e.target;
   const value = btn.dataset.value;
   const action = btn.dataset.action;
-  
+
   if(value) addValue(value);
   if(action === 'decimal') addDecimal();
   if(action === 'operator') addOperator(btn.textContent);
