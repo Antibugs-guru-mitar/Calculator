@@ -74,59 +74,45 @@ const addOperator = (op) => {
   updateDisplay();
 };
 
-// CALCULATION - YAHAN ILAJ KIYA HAI MITAR 🔥 SIN COS THEEK
+// CALCULATION - YAHAN SIRF ISKO BADLA HAI MITAR 🔥 ERROR KHATAM
 const calculate = () => {
   try {
-    // Fix: 5. ko 5.0 banao
     let expression = currentInput.replace(/(\d+)\.$/, '$1.0');
     expression = expression.replace(/\.$/, '.0');
 
     expression = expression
-    .replace(/×/g, '*')
-    .replace(/÷/g, '/')
-    .replace(/−/g, '-')
-    .replace(/π/g, 'pi')
-    .replace(/√/g, 'sqrt')
-    .replace(/xʸ/g, '^');
+  .replace(/×/g, '*')
+  .replace(/÷/g, '/')
+  .replace(/−/g, '-')
+  .replace(/π/g, 'pi')
+  .replace(/√/g, 'sqrt')
+  .replace(/xʸ/g, '^');
 
-    // ===== SIN COS TAN KA NAYA ILAJ START =====
-    // Purana unit( wala tareeka hata diya, ye wala 100% chalta hai
+    // ===== SIRF YE HISSA BADLA HAI - ERROR-FREE ILAJ =====
     const scope = {
       pi: Math.PI,
       e: Math.E
     };
 
+    // DEG mode ka seedha formula - math.import hata diya
     if(isDegree){
-      // DEG MODE: degree ko radian mein badlo pehle
-      math.import({
-        sin: function(x) { return Math.sin(x * Math.PI / 180); },
-        cos: function(x) { return Math.cos(x * Math.PI / 180); },
-        tan: function(x) { return Math.tan(x * Math.PI / 180); },
-        asin: function(x) { return Math.asin(x) * 180 / Math.PI; },
-        acos: function(x) { return Math.acos(x) * 180 / Math.PI; },
-        atan: function(x) { return Math.atan(x) * 180 / Math.PI; }
-      }, { override: true });
-    } else {
-      // RAD MODE: direct math.js wale use karo
-      math.import({
-        sin: Math.sin,
-        cos: Math.cos,
-        tan: Math.tan,
-        asin: Math.asin,
-        acos: Math.acos,
-        atan: Math.atan
-      }, { override: true });
+      expression = expression
+    .replace(/sin\(/g, 'sin((pi/180)*')
+    .replace(/cos\(/g, 'cos((pi/180)*')
+    .replace(/tan\(/g, 'tan((pi/180)*')
+    .replace(/asin\(/g, '(180/pi)*asin(')
+    .replace(/acos\(/g, '(180/pi)*acos(')
+    .replace(/atan\(/g, '(180/pi)*atan(');
     }
-    // ===== SIN COS TAN KA NAYA ILAJ END =====
+    // ===== ILAJ KHATAM =====
 
     const result = math.evaluate(expression, scope);
     history.textContent = currentInput + ' =';
 
-    // Result format karo - 2.1.11 jaisa kabhi nahi aayega
     if(typeof result === 'number'){
       currentInput = math.format(result, {precision: 14, notation: 'fixed'})
-      .replace(/\.?0+$/, ''); // Extra 0 hatao: 2.1000 -> 2.1
-      if(currentInput === '-0') currentInput = '0'; // -0 ka bug fix
+    .replace(/\.?0+$/, '');
+      if(currentInput === '-0') currentInput = '0';
     } else {
       currentInput = String(result);
     }
@@ -138,7 +124,9 @@ const calculate = () => {
     shouldReset = true;
     updateDisplay();
     setTimeout(() => {
+      currentInput = '0';
       history.textContent = '';
+      updateDisplay();
     }, 1500);
   }
 };
