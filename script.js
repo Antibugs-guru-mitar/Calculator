@@ -85,6 +85,9 @@ const calculate = () => {
       // Operator replace
       expr = expr.replace(/×/g, '*').replace(/÷/g, '/').replace(/−/g, '-').replace(/\^/g, '**');
       
+      // FIX #1: √ KO sqrt() MEIN BADAL DO 💚✅
+      expr = expr.replace(/√/g, 'sqrt');
+      
       // Factorial handle karo
       expr = expr.replace(/(\d+)!/g, (match, num) => {
         let f = 1;
